@@ -1,47 +1,73 @@
-// Import all the packages we need
+// server.js
 const express = require('express');
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+require('dotenv').config();
 
-// Import our routes
-const userRoutes = require('./routes/userRoutes');
-
-// Load environment variables from .env file
-dotenv.config();
-
-// Create Express application
 const app = express();
 
-// Middleware to parse JSON bodies
-app.use(express.json());
+// Security middleware
+app.use(helmet());
+app.use(cors());
 
-// Middleware to parse URL-encoded bodies
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: {
+    success: false,
+    message: 'Too many requests from this IP, please try again later.'
+  }
+});
+app.use(limiter);
+
+// Body parser middleware
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Import routes
+const userRoutes = require('./routes/userRoutes');
+const postRoutes = require('./routes/postRoutes');
+const kycRoutes = require('./routes/kycRoutes');
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
-    console.log('✅ Connected to MongoDB successfully!');
+    console.log('Connected to MongoDB successfully');
   })
   .catch((error) => {
-    console.log('❌ MongoDB connection error:', error.message);
+    console.error('MongoDB connection error:', error);
+    process.exit(1);
   });
 
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/api/posts', postRoutes);
+app.use('/api/kyc', kycRoutes);
 
 // Welcome route
 app.get('/', (req, res) => {
   res.json({
     success: true,
-    message: 'Welcome to the Express User API! 🚀',
+    message: 'Welcome to Express MongoDB API',
+    version: '1.0.0',
     endpoints: {
-      'POST /api/users/register': 'Create a new user account',
-      'POST /api/users/login': 'Login to existing account',
-      'GET /api/users': 'Get all users (requires authentication)',
-      'PUT /api/users/:id': 'Update a user (requires authentication)',
-      'DELETE /api/users/:id': 'Delete a user (requires authentication)'
+      users: '/api/users',
+      posts: '/api/posts',
+      kyc: '/api/kyc'
     }
+  });
+});
+
+// Health check route
+app.get('/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Server is running perfectly',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
   });
 });
 
@@ -49,22 +75,25 @@ app.get('/', (req, res) => {
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
-    message: 'Route not found'
+    message: 'Route not found',
+    path: req.originalUrl
   });
 });
 
-// Error handling middleware
+// Global error handler
 app.use((error, req, res, next) => {
-  console.error(error.stack);
-  res.status(500).json({
+  console.error('Global error handler:', error);
+  
+  res.status(error.status || 500).json({
     success: false,
-    message: 'Something went wrong!'
+    message: error.message || 'Internal server error',
+    ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
   });
 });
 
-// Start the server
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-  console.log(`📝 Visit http://localhost:${PORT} to see the API`);
+  console.log(`Server is running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });

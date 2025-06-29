@@ -1,0 +1,25 @@
+// routes/kycRoutes.js
+const express = require('express');
+const router = express.Router();
+const {
+  submitKYC,
+  getUserKYC,
+  getAllKYC,
+  updateKYC,
+  verifyKYC,
+  deleteKYC
+} = require('../controllers/kycController');
+
+const { authenticate, isAdmin } = require('../middleware/auth');
+
+// Protected routes (authentication required)
+router.post('/submit', authenticate, submitKYC);
+router.get('/my-kyc', authenticate, getUserKYC);
+router.put('/update', authenticate, updateKYC);
+
+// Admin only routes
+router.get('/all', authenticate, isAdmin, getAllKYC);
+router.put('/verify/:id', authenticate, isAdmin, verifyKYC);
+router.delete('/:id', authenticate, isAdmin, deleteKYC);
+
+module.exports = router;
