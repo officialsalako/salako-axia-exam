@@ -29,6 +29,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Import routes
 const userRoutes = require('./routes/userRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
 const postRoutes = require('./routes/postRoutes');
 const kycRoutes = require('./routes/kycRoutes');
 
@@ -44,6 +45,7 @@ mongoose.connect(process.env.MONGODB_URI)
 
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/api/upload', uploadRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/kyc', kycRoutes);
 
