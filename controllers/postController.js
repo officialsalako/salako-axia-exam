@@ -1,6 +1,6 @@
 // controllers/postController.js
-import { create, find, countDocuments, findById, findByIdAndUpdate, findByIdAndDelete } from '../models/post';
-import User from '../models/User';
+import { create, find, countDocuments, findById, findByIdAndUpdate, findByIdAndDelete } from '../models/post.js';
+import User from '../models/User.js';
 
 // Create a new post
 const createPost = async (req, res) => {

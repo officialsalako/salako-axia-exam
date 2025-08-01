@@ -64,4 +64,4 @@ postSchema.index({ title: 'text', content: 'text' });
 postSchema.index({ author: 1 });
 postSchema.index({ createdAt: -1 });
 
-module.exports = mongoose.model('Post', postSchema);
+export default mongoose.model('Post', postSchema);

@@ -1,30 +1,30 @@
 // middleware/auth.js
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+import jwt from 'jsonwebtoken';
+import User from '../models/User';
 
 // Check if user is logged in
-const authenticate = async (req, res, next) => {
+async function authenticate(req, res, next) {
   try {
     // Get token from header
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    
+
     if (!token) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'No token provided. Access denied.' 
+      return res.status(401).json({
+        success: false,
+        message: 'No token provided. Access denied.'
       });
     }
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
+
     // Find user
     const user = await User.findById(decoded.id).select('-password');
-    
+
     if (!user) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Invalid token. User not found.' 
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token. User not found.'
       });
     }
 
@@ -33,12 +33,12 @@ const authenticate = async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);
-    res.status(401).json({ 
-      success: false, 
-      message: 'Invalid token. Access denied.' 
+    res.status(401).json({
+      success: false,
+      message: 'Invalid token. Access denied.'
     });
   }
-};
+}
 
 // Check if user is admin
 const isAdmin = (req, res, next) => {

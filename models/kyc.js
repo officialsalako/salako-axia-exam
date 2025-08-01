@@ -1,5 +1,5 @@
 // models/KYC.js
-const mongoose = require('mongoose');
+import mongoose from ('mongoose');
 
 const kycSchema = new mongoose.Schema({
   user: {
